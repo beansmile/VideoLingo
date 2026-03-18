@@ -111,8 +111,20 @@ def process_transcription(result: Dict) -> pd.DataFrame:
     for segment in result['segments']:
         # Get speaker_id, if not exists, set to None
         speaker_id = segment.get('speaker_id', None)
-        
-        for word in segment['words']:
+
+        # Handle empty words array (e.g., from Paraformer, Fun-ASR)
+        words = segment.get('words', [])
+        if not words and segment.get('text'):
+            # Generate a single word entry from the segment text
+            all_words.append({
+                'text': segment['text'],
+                'start': segment.get('start', 0),
+                'end': segment.get('end', 0),
+                'speaker_id': speaker_id
+            })
+            continue
+
+        for word in words:
             # Check word length
             if len(word["word"]) > 30:
                 rprint(f"[yellow]⚠️ Warning: Detected word longer than 30 characters, skipping: {word['word']}[/yellow]")
@@ -155,10 +167,24 @@ def process_transcription(result: Dict) -> pd.DataFrame:
                 
                 all_words.append(word_dict)
     
+    # Handle empty DataFrame case
+    if not all_words:
+        rprint("[yellow]⚠️ Warning: No words found in transcription result, creating empty DataFrame with required columns[/yellow]")
+        return pd.DataFrame(columns=['text', 'start', 'end', 'speaker_id'])
+
     return pd.DataFrame(all_words)
 
 def save_results(df: pd.DataFrame):
     os.makedirs('output/log', exist_ok=True)
+
+    # Check if DataFrame is empty or missing 'text' column
+    if df.empty or 'text' not in df.columns:
+        rprint("[yellow]⚠️ Warning: DataFrame is empty or missing 'text' column, creating empty result file[/yellow]")
+        # Create an empty DataFrame with required columns
+        df = pd.DataFrame(columns=['text', 'start', 'end', 'speaker_id'])
+        df.to_excel(_2_CLEANED_CHUNKS, index=False)
+        rprint(f"[green]📊 Empty Excel file saved to {_2_CLEANED_CHUNKS}[/green]")
+        return
 
     # Remove rows where 'text' is empty
     initial_rows = len(df)
@@ -166,13 +192,13 @@ def save_results(df: pd.DataFrame):
     removed_rows = initial_rows - len(df)
     if removed_rows > 0:
         rprint(f"[blue]ℹ️ Removed {removed_rows} row(s) with empty text.[/blue]")
-    
+
     # Check for and remove words longer than 20 characters
     long_words = df[df['text'].str.len() > 30]
     if not long_words.empty:
         rprint(f"[yellow]⚠️ Warning: Detected {len(long_words)} word(s) longer than 30 characters. These will be removed.[/yellow]")
         df = df[df['text'].str.len() <= 30]
-    
+
     df['text'] = df['text'].apply(lambda x: f'"{x}"')
     df.to_excel(_2_CLEANED_CHUNKS, index=False)
     rprint(f"[green]📊 Excel file saved to {_2_CLEANED_CHUNKS}[/green]")

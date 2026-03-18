@@ -95,24 +95,30 @@ def split_align_subs(src_lines: List[str], tr_lines: List[str]):
 
 def split_for_sub_main():
     console.print("[bold green]🚀 Start splitting subtitles...[/bold green]")
-    
+
     df = pd.read_excel(_4_2_TRANSLATION)
+    # Filter out rows with NaN values in Source or Translation
+    df = df.dropna(subset=['Source', 'Translation'])
+    # Convert to string to ensure type consistency
+    df['Source'] = df['Source'].astype(str)
+    df['Translation'] = df['Translation'].astype(str)
+
     src = df['Source'].tolist()
     trans = df['Translation'].tolist()
-    
+
     subtitle_set = load_key("subtitle")
     MAX_SUB_LENGTH = subtitle_set["max_length"]
     TARGET_SUB_MULTIPLIER = subtitle_set["target_multiplier"]
-    
+
     for attempt in range(3):  # 多次切割
         console.print(Panel(f"🔄 Split attempt {attempt + 1}", expand=False))
         split_src, split_trans, remerged = split_align_subs(src.copy(), trans)
-        
-        # 检查是否所有字幕都符合长度要求
-        if all(len(src) <= MAX_SUB_LENGTH for src in split_src) and \
-           all(calc_len(tr) * TARGET_SUB_MULTIPLIER <= MAX_SUB_LENGTH for tr in split_trans):
+
+        # 检查是否所有字幕都符合长度要求 (handle potential float/NaN values)
+        if all(len(str(src)) <= MAX_SUB_LENGTH for src in split_src) and \
+           all(calc_len(str(tr)) * TARGET_SUB_MULTIPLIER <= MAX_SUB_LENGTH for tr in split_trans):
             break
-        
+
         # 更新源数据继续下一轮分割
         src, trans = split_src, split_trans
 

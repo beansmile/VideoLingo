@@ -1,56 +1,85 @@
-ARG CUDA_VERSION=12.4.1
-FROM nvidia/cuda:${CUDA_VERSION}-devel-ubuntu20.04
+FROM python:3.10
 
 # Set environment variables
-ENV DEBIAN_FRONTEND=noninteractive
-ARG PYTHON_VERSION=3.10
+ENV DEBIAN_FRONTEND=noninteractive \
+    PYTHONUNBUFFERED=1 \
+    PYTHONDONTWRITEBYTECODE=1 \
+    PIP_NO_CACHE_DIR=1 \
+    PIP_DISABLE_PIP_VERSION_CHECK=1
 
-# Change software sources and install basic tools and system dependencies
-RUN sed -i 's/archive.ubuntu.com/mirrors.aliyun.com/g' /etc/apt/sources.list && \
-    sed -i 's/security.ubuntu.com/mirrors.aliyun.com/g' /etc/apt/sources.list && \
-    apt-get update && apt-get install -y --no-install-recommends \
-    software-properties-common git curl sudo ffmpeg fonts-noto wget \
-    && add-apt-repository ppa:deadsnakes/ppa \
-    && apt-get update -y \
-    && apt-get install -y python${PYTHON_VERSION} python${PYTHON_VERSION}-dev python${PYTHON_VERSION}-venv \
-    && update-alternatives --install /usr/bin/python3 python3 /usr/bin/python${PYTHON_VERSION} 1 \
-    && update-alternatives --set python3 /usr/bin/python${PYTHON_VERSION} \
-    && ln -sf /usr/bin/python${PYTHON_VERSION}-config /usr/bin/python3-config \
-    && curl -sS https://bootstrap.pypa.io/get-pip.py | python${PYTHON_VERSION} \
-    && python3 --version && python3 -m pip --version
+# ==============================================================================
+# 国内镜像源配置 - 加速下载
+# ==============================================================================
 
-# Clean apt cache
-RUN apt-get clean && rm -rf /var/lib/apt/lists/*
+# 替换 Debian APT 源为阿里云镜像
+RUN sed -i 's/deb.debian.org/mirrors.aliyun.com/g' /etc/apt/sources.list.d/debian.sources && \
+    sed -i 's/security.ubuntu.org/mirrors.aliyun.com/g' /etc/apt/sources.list.d/debian.sources
 
-# Workaround for CUDA compatibility issues
-RUN ldconfig /usr/local/cuda-$(echo $CUDA_VERSION | cut -d. -f1,2)/compat/
+# 安装系统依赖
+RUN apt-get update && \
+    apt-get install -y --no-install-recommends \
+    git \
+    curl \
+    ffmpeg \
+    fonts-noto \
+    && rm -rf /var/lib/apt/lists/* \
+    && apt-get clean
 
-# Set working directory and clone repository
+# 配置 pip 使用清华 PyPI 镜像源
+RUN pip config set global.index-url https://pypi.tuna.tsinghua.edu.cn/simple && \
+    pip config set install.trusted-host pypi.tuna.tsinghua.edu.cn
+
+# Set working directory
 WORKDIR /app
-RUN git clone https://github.com/Huanshere/VideoLingo.git .
 
-# Install PyTorch and torchaudio
-RUN pip install torch==2.0.0 torchaudio==2.0.0 --index-url https://download.pytorch.org/whl/cu118
+# 克隆项目（使用 beansmile 的 fork，分支 feat-support-new-asr）
+RUN git clone --branch feat-support-new-asr https://github.com/beansmile/VideoLingo.git . && \
+    rm -rf .git
 
-# Clean up unnecessary files
-RUN rm -rf .git
+# ==============================================================================
+# 安装 PyTorch (CPU 版本)
+# 根据 install.py，使用 PyTorch 2.8.0
+# ==============================================================================
+RUN pip install --no-cache-dir torch==2.8.0 torchaudio==2.8.0
 
-# Upgrade pip and install basic dependencies
-RUN pip config set global.index-url https://pypi.tuna.tsinghua.edu.cn/simple
+# ==============================================================================
+# 安装 Qwen API 相关依赖（dashscope）
+# Qwen-ASR 和 Qwen-TTS 需要使用 dashscope SDK
+# ==============================================================================
+RUN pip install --no-cache-dir dashscope
 
-# Install dependencies
-COPY requirements.txt .
-RUN pip install -e .
+# ==============================================================================
+# 安装 demucs（使用 --no-deps 避免 torchaudio 冲突）
+# 参考 install.py 第 201-209 行
+# ==============================================================================
+RUN pip install --no-cache-dir --no-deps "demucs[dev]@git+https://github.com/adefossez/demucs" && \
+    pip install --no-cache-dir dora-search openunmix lameenc
 
-# Set CUDA-related environment variables
-ENV CUDA_HOME=/usr/local/cuda
-ENV PATH=${CUDA_HOME}/bin:${PATH}
-ENV LD_LIBRARY_PATH=${CUDA_HOME}/lib64:${LD_LIBRARY_PATH}
+# ==============================================================================
+# 安装项目依赖
+# 参考 install.py 第 211-212 行
+# ==============================================================================
+RUN pip install --no-cache-dir -e .
 
-# Set CUDA architecture list
-ARG TORCH_CUDA_ARCH_LIST="7.0 7.5 8.0 8.6+PTX"
-ENV TORCH_CUDA_ARCH_LIST=${TORCH_CUDA_ARCH_LIST}
+# ==============================================================================
+# Spacy 模型 - 从本地文件夹复制
+#
+# 使用方法：
+# 1. 本地下载模型（使用代理）：
+#    - https://github.com/explosion/spacy-models/releases/download/en_core_web_md-3.8.0/en_core_web_md-3.8.0-py3-none-any.whl
+#    - https://github.com/explosion/spacy-models/releases/download/zh_core_web_md-3.8.0/zh_core_web_md-3.8.0-py3-none-any.whl
+# 2. 上传到服务器的 /www/VideoLingo/spacy_models/ 目录
+# 3. 构建 Docker 镜像时会自动安装
+# ==============================================================================
+COPY spacy_models/ /tmp/spacy_models/
+RUN pip install --no-cache-dir /tmp/spacy_models/*.whl && \
+    rm -rf /tmp/spacy_models
 
+# 创建必要的目录
+RUN mkdir -p /app/output /app/_model_cache /app/logs
+
+# 暴露端口
 EXPOSE 8501
 
-CMD ["streamlit", "run", "st.py"]
+# 启动命令
+CMD ["streamlit", "run", "st.py", "--server.port=8501", "--server.address=0.0.0.0"]

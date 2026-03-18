@@ -74,7 +74,30 @@ def get_sentence_timestamps(df_words, df_sentences):
     for idx, sentence in df_sentences['Source'].items():
         clean_sentence = remove_punctuation(sentence.lower()).replace(" ", "")
         sentence_len = len(clean_sentence)
-        
+
+        # Handle empty sentences or sentences that become empty after cleaning
+        if sentence_len == 0:
+            original_sentence = str(df_sentences['Source'][idx]).strip()
+            if not original_sentence or original_sentence.isspace():
+                # Assign default timestamp for empty sentences
+                if time_stamp_list:
+                    # Use the end time of the previous sentence
+                    prev_end = time_stamp_list[-1][1]
+                    time_stamp_list.append((prev_end, prev_end))
+                else:
+                    # Use default timestamp if no previous sentence exists
+                    time_stamp_list.append((0.0, 0.0))
+                print(f"\n⚠️ Warning: Empty sentence detected at index {idx}, assigning default timestamp")
+            else:
+                # Sentence contains only punctuation/special characters
+                print(f"\n⚠️ Warning: Sentence contains only punctuation/special chars: '{original_sentence}'")
+                if time_stamp_list:
+                    prev_end = time_stamp_list[-1][1]
+                    time_stamp_list.append((prev_end, prev_end))
+                else:
+                    time_stamp_list.append((0.0, 0.0))
+            continue
+
         match_found = False
         while current_pos <= len(full_words_str) - sentence_len:
             if full_words_str[current_pos:current_pos+sentence_len] == clean_sentence:

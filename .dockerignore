@@ -1,0 +1,55 @@
+# Git
+.git
+.gitignore
+.gitattributes
+
+# Python
+__pycache__
+*.py[cod]
+*$py.class
+*.so
+.Python
+venv/
+env/
+ENV/
+spacy_env/
+*.egg-info/
+dist/
+build/
+
+# 项目输出和缓存
+output/
+_model_cache/
+logs/
+*.log
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Docker
+Dockerfile*
+docker-compose*.yml
+.dockerignore
+
+# 文档
+docs/
+*.md
+LICENSE
+
+# 测试
+tests/
+.pytest_cache/
+
+# 临时文件
+tmp/
+temp/
+*.tmp
+

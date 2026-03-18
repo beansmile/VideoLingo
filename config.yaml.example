@@ -30,47 +30,72 @@ whisper:
   # Whisper specified recognition language ISO 639-1
   language: 'en'
   detected_language: 'en'
-  # Whisper running mode ["local", "cloud", "elevenlabs"]. Specifies where to run, cloud uses 302.ai API
+  # Whisper running mode ["local", "cloud", "elevenlabs", "qwen", "paraformer", "fun-asr"]. Specifies where to run, cloud uses 302.ai API
   runtime: 'local'
   # 302.ai API key
   whisperX_302_api_key: 'your_302_api_key'
   # ElevenLabs API key (experimental)
   elevenlabs_api_key: 'your_elevenlabs_api_key'
+  
+  # ASR 运行时配置
+  # whisper.runtime 可选值: local, cloud, elevenlabs, qwen, paraformer, fun-asr
+  # runtime = "qwen"  # 使用 Qwen-ASR
+  
+  # 语言配置
+  # whisper.language 可选值: en, zh, auto, etc.
+  # language = "zh"  # 中文
+  
+  # API 密钥配置
+  # Qwen-ASR API 密钥
+  qwen_api_key: 'your_qwen_api_key'
+  
+  # Paraformer API 密钥  
+  paraformer_api_key: 'your_paraformer_api_key'
+  
+  # Fun-ASR API 密钥
+  fun_asr_api_key: 'your_fun_asr_api_key'
+  
+  # ElevenLabs API 密钥
+  elevenlabs_api_key: 'your_elevenlabs_api_key'
+  
+  # 测试模式
+  test_mode: false
+  
+  # 日志配置
+  # 日志级别和输出
+  log_level: "INFO"
+  log_file: "output/log/asr.log"
+  
+  # 性能配置
+  # 批处理大小
+  batch_size: 16  # 本地模型的批处理大小
+  
+  # 并发限制
+  max_concurrent: 4  # 最大并发任务数
+  
+  # 错误处理配置
+  # 重试策略
+  max_retries: 3
+  retry_delay: 5  # 重试延迟（秒）
+  
+  # 超时设置
+  timeout: 30  # API 调用超时（秒）
+  
+  # 调试模式
+  debug: false
 
-# Whether to burn subtitles into the video
-burn_subtitles: true
+## ======================== 监控配置 ======================== ##
 
-## ======================== Advanced Settings ======================== ##
-# *🔬 h264_nvenc GPU acceleration for ffmpeg, make sure your GPU supports it
-ffmpeg_gpu: false
-
-# *Youtube settings
-youtube:
-  cookies_path: ''
-
-# *Default resolution for downloading YouTube videos [360, 1080, best]
-ytb_resolution: '1080'
-
-subtitle:
-  # *Maximum length of each subtitle line in characters
-  max_length: 75
-  # *Translated subtitles are slightly larger than source subtitles, affecting the reference length for subtitle splitting
-  target_multiplier: 1.2
-
-# *Summary length, set low to 2k if using local LLM
-summary_length: 8000
-
-# *Maximum number of words for the first rough cut, below 18 will cut too finely affecting translation, above 22 is too long and will make subsequent subtitle splitting difficult to align
-max_split_length: 20
-
-# *Whether to reflect the translation result in the original text
-reflect_translate: true
-
-# *Whether to pause after extracting professional terms and before translation, allowing users to manually adjust the terminology table output\log\terminology.json
-pause_before_translate: false
+monitoring:
+  # 健康检查
+  health_check_interval: 60  # 健康检查间隔（秒）
+  
+  # 性能监控
+  collect_metrics: true
+  metrics_interval: 300  # 指标收集间隔（秒）
 
 ## ======================== Dubbing Settings ======================== ##
-# TTS selection [sf_fish_tts, openai_tts, gpt_sovits, azure_tts, fish_tts, edge_tts, custom_tts]
+# TTS selection [sf_fish_tts, openai_tts, gpt_sovits, azure_tts, fish_tts, edge_tts, custom_tts, qwen_tts]
 tts_method: 'azure_tts'
 
 # SiliconFlow FishTTS
@@ -94,6 +119,17 @@ openai_tts:
 azure_tts:
   api_key: 'YOUR_302_API_KEY'
   voice: 'zh-CN-YunfengNeural'
+
+# Qwen-TTS configuration (阿里云通义千问 TTS)
+qwen_tts:
+  # DashScope API Key (使用与 Qwen-ASR 相同的 API Key)
+  api_key: 'your_qwen_tts_api_key'
+  # 音色选择 (Cherry, Serena, Ethan, Chelsie, Momo, Vivian, Moon, Maia, Kai, Nofish 等)
+  voice: 'Cherry'
+  # 模型选择 (qwen3-tts-flash, qwen3-tts-instruct-flash 等)
+  model: 'qwen3-tts-flash'
+  # 地域选择 (cn: 北京地域, intl: 新加坡地域)
+  region: 'cn'
 
 # FishTTS configuration, 302.ai API only
 fish_tts:
@@ -129,10 +165,6 @@ speed_factor:
 min_subtitle_duration: 2.5 # Minimum subtitle duration, will be forcibly extended
 min_trim_duration: 3.5 # Subtitles shorter than this value won't be split
 tolerance: 1.5 # Allowed extension time to the next subtitle
-
-
-
-
 
 ## ======================== Additional settings ======================== ##
 
@@ -179,3 +211,35 @@ language_split_with_space:
 language_split_without_space:
 - 'zh'
 - 'ja'
+
+# Whether to burn subtitles into the video
+burn_subtitles: true
+
+## ======================== Advanced Settings ======================== ##
+# *🔬 h264_nvenc GPU acceleration for ffmpeg, make sure your GPU supports it
+ffmpeg_gpu: false
+
+# *Youtube settings
+youtube:
+  cookies_path: ''
+
+# *Default resolution for downloading YouTube videos [360, 1080, best]
+ytb_resolution: '1080'
+
+subtitle:
+  # *Maximum length of each subtitle line in characters
+  max_length: 75
+  # *Translated subtitles are slightly larger than source subtitles, affecting the reference length for subtitle splitting
+  target_multiplier: 1.2
+
+# *Summary length, set low to 2k if using local LLM
+summary_length: 8000
+
+# *Maximum number of words for the first rough cut, below 18 will cut too finely affecting translation, above 22 is too long and will make subsequent subtitle splitting difficult to align
+max_split_length: 20
+
+# *Whether to reflect the translation result in the original text
+reflect_translate: true
+
+# *Whether to pause after extracting professional terms and before translation, allowing users to manually adjust the terminology table output\log\terminology.json
+pause_before_translate: false

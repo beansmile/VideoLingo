@@ -139,8 +139,9 @@ def split_sentences_main(nlp):
         for sentence in all_split_sentences:
             output_file.write(sentence + "\n")
         # do not add a newline at the end of the file
-        output_file.seek(output_file.tell() - 1, os.SEEK_SET)
-        output_file.truncate()
+        if output_file.tell() > 0:
+            output_file.seek(output_file.tell() - 1, os.SEEK_SET)
+            output_file.truncate()
 
     # delete the original file
     os.remove(SPLIT_BY_COMMA_FILE)

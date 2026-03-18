@@ -59,7 +59,7 @@ def page_setting():
                 update_key("whisper.language", langs[lang])
                 st.rerun()
 
-        runtime = st.selectbox(t("WhisperX Runtime"), options=["local", "cloud", "elevenlabs"], index=["local", "cloud", "elevenlabs"].index(load_key("whisper.runtime")), help=t("Local runtime requires >8GB GPU, cloud runtime requires 302ai API key, elevenlabs runtime requires ElevenLabs API key"))
+        runtime = st.selectbox(t("WhisperX Runtime"), options=["local", "cloud", "elevenlabs", "qwen", "paraformer", "fun-asr"], index=["local", "cloud", "elevenlabs", "qwen", "paraformer", "fun-asr"].index(load_key("whisper.runtime")), help=t("Local runtime requires >8GB GPU, cloud runtime requires 302ai API key, elevenlabs runtime requires ElevenLabs API key"))
         if runtime != load_key("whisper.runtime"):
             update_key("whisper.runtime", runtime)
             st.rerun()
@@ -84,7 +84,7 @@ def page_setting():
             update_key("burn_subtitles", burn_subtitles)
             st.rerun()
     with st.expander(t("Dubbing Settings"), expanded=True):
-        tts_methods = ["azure_tts", "openai_tts", "fish_tts", "sf_fish_tts", "edge_tts", "gpt_sovits", "custom_tts", "sf_cosyvoice2", "f5tts"]
+        tts_methods = ["azure_tts", "openai_tts", "fish_tts", "sf_fish_tts", "edge_tts", "gpt_sovits", "custom_tts", "sf_cosyvoice2", "f5tts", "qwen_tts"]
         select_tts = st.selectbox(t("TTS Method"), options=tts_methods, index=tts_methods.index(load_key("tts_method")))
         if select_tts != load_key("tts_method"):
             update_key("tts_method", select_tts)
@@ -151,6 +151,21 @@ def page_setting():
         
         elif select_tts == "f5tts":
             config_input("302ai API", "f5tts.302_api")
+
+        elif select_tts == "qwen_tts":
+            config_input(t("DashScope API Key"), "qwen_tts.api_key")
+            config_input(t("Qwen Voice"), "qwen_tts.voice", help=t("Available voices: Cherry, Serena, Ethan, Chelsie, Momo, Vivian, Moon, Maia, Kai, Nofish, etc."))
+            config_input(t("Qwen Model"), "qwen_tts.model", help=t("Available models: qwen3-tts-flash, qwen3-tts-instruct-flash"))
+            region_options = {"cn": "中国内地", "intl": "国际"}
+            selected_region = st.selectbox(
+                t("Region"),
+                options=list(region_options.keys()),
+                format_func=lambda x: region_options[x],
+                index=list(region_options.keys()).index(load_key("qwen_tts.region")) if load_key("qwen_tts.region") in region_options.keys() else 0
+            )
+            if selected_region != load_key("qwen_tts.region"):
+                update_key("qwen_tts.region", selected_region)
+                st.rerun()
         
 def check_api():
     try:

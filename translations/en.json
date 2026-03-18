@@ -106,5 +106,11 @@
     "No NVIDIA GPU detected": "No NVIDIA GPU detected",
     "No NVIDIA GPU detected or NVIDIA drivers not properly installed": "No NVIDIA GPU detected or NVIDIA drivers not properly installed",
     "LLM JSON Format Support": "LLM JSON Format Support",
-    "Enable if your LLM supports JSON mode output": "Enable if your LLM supports JSON mode output"
+    "Enable if your LLM supports JSON mode output": "Enable if your LLM supports JSON mode output",
+    "DashScope API Key": "DashScope API Key",
+    "Qwen Voice": "Qwen Voice",
+    "Available voices: Cherry, Serena, Ethan, Chelsie, Momo, Vivian, Moon, Maia, Kai, Nofish, etc.": "Available voices: Cherry, Serena, Ethan, Chelsie, Momo, Vivian, Moon, Maia, Kai, Nofish, etc.",
+    "Qwen Model": "Qwen Model",
+    "Available models: qwen3-tts-flash, qwen3-tts-instruct-flash": "Available models: qwen3-tts-flash, qwen3-tts-instruct-flash",
+    "Region": "Region"
 }

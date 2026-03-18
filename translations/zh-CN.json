@@ -106,6 +106,12 @@
     "No NVIDIA GPU detected": "未检测到NVIDIA GPU",
     "No NVIDIA GPU detected or NVIDIA drivers not properly installed": "未检测到NVIDIA GPU或NVIDIA驱动未正确安装",
     "LLM JSON Format Support": "LLM JSON格式支持",
-    "Enable if your LLM supports JSON mode output": "如果选用的LLM支持JSON模式输出，请启用"
+    "Enable if your LLM supports JSON mode output": "如果选用的LLM支持JSON模式输出，请启用",
+    "DashScope API Key": "DashScope API密钥",
+    "Qwen Voice": "Qwen语音",
+    "Available voices: Cherry, Serena, Ethan, Chelsie, Momo, Vivian, Moon, Maia, Kai, Nofish, etc.": "可用语音: Cherry, Serena, Ethan, Chelsie, Momo, Vivian, Moon, Maia, Kai, Nofish 等",
+    "Qwen Model": "Qwen模型",
+    "Available models: qwen3-tts-flash, qwen3-tts-instruct-flash": "可用模型: qwen3-tts-flash, qwen3-tts-instruct-flash",
+    "Region": "地域"
 }
 

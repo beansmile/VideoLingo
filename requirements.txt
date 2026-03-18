@@ -1,4 +1,5 @@
 librosa==0.11.0
+dashscope
 pytorch-lightning==2.6.1
 lightning==2.6.1
 transformers>=4.48.0

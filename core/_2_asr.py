@@ -32,6 +32,15 @@ def transcribe():
     elif runtime == "elevenlabs":
         from core.asr_backend.elevenlabs_asr import transcribe_audio_elevenlabs as ts
         rprint("[cyan]🎤 Transcribing audio with ElevenLabs API...[/cyan]")
+    elif runtime == "qwen":
+        from core.asr_backend.qwen_asr import transcribe_audio_qwen as ts
+        rprint("[cyan]🎤 Transcribing audio with Qwen-ASR...[/cyan]")
+    elif runtime == "paraformer":
+        from core.asr_backend.paraformer_asr import transcribe_audio_paraformer as ts
+        rprint("[cyan]🎤 Transcribing audio with Paraformer...[/cyan]")
+    elif runtime == "fun-asr":
+        from core.asr_backend.fun_asr import transcribe_audio_fun as ts
+        rprint("[cyan]🎤 Transcribing audio with Fun-ASR...[/cyan]")
 
     for start, end in segments:
         result = ts(_RAW_AUDIO_FILE, vocal_audio, start, end)
